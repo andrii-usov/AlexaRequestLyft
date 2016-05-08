@@ -5,9 +5,9 @@ Created on May 7, 2016
 '''
 import httplib, urllib2, urllib, json, requests
 from geopy.geocoders import Nominatim
-from helpers import get_bearer_token
+from helpers import geo, send_request
 
-address="72 Bowne St, Brooklyn"
+
 intervals = (
     ('weeks', 604800),  # 60  60  24 * 7
     ('days', 86400),    # 60  60  24
@@ -28,57 +28,42 @@ def display_time(seconds, granularity=2):
             result.append("{} {}".format(value, name))
     return ', '.join(result[:granularity])
 
-#headers = {
-#   'Authorization': 'Bearer gAAAAABXLl70nF3DltGdK32gvOMwcBYyp2TAKQbzsenCvRcDPVJ54PcU9_t0zris5EJm-UJIDpZZvSyOhWNXfNioMkyi1es5f30yMaV-0AihBs8rWh-AhBt-gPQlrl6RoTWyDR2QgHlrab7IhqgXtYjpajBCKv9h-u1C4JjylbG8NJz38Iqi5fV-7W4063qAadKoTD-hdgigflkWcPAvrsf_JblbHWWMhQ==',
-#}
+from_address="72 Bowne St, Brooklyn"
+ride_type="lyft_line"
 
-#token = "gAAAAABXLl70nF3DltGdK32gvOMwcBYyp2TAKQbzsenCvRcDPVJ54PcU9_t0zris5EJm-UJIDpZZvSyOhWNXfNioMkyi1es5f30yMaV-0AihBs8rWh-AhBt-gPQlrl6RoTWyDR2QgHlrab7IhqgXtYjpajBCKv9h-u1C4JjylbG8NJz38Iqi5fV-7W4063qAadKoTD-hdgigflkWcPAvrsf_JblbHWWMhQ=="
-  
-#headers = {
-#     'Authorization': "Bearer " + token
-# }
+def get_cost_data(session):
+ ride_type="lyft_line"
+ start_latitude, start_longitude=geo()
 
-
- 
-
-def get_ride_info(session,start_latitude,start_longitude,end_latitude,end_longitude):
-
- headers = {
-    'Authorization': "Bearer " + get_bearer_token(session),
- }
- URL='https://api.lyft.com/v1/cost?start_lat={}&start_lng={}&end_lat={}&end_lng={}'.format(start_latitude,start_longitude,end_latitude,end_longitude)
- req = urllib2.Request(URL, headers=headers)
- response = urllib2.urlopen(req)
- the_page = response.read()
- data = json.loads(the_page)
- #for key, value in data.items():
-# print key, value
+ end_latitude, end_longitude = geo(from_address)
+ request_string = 'cost?start_lat={}&start_lng={}&end_lat={}&end_lng={}&ride_type={}'.format(start_latitude,start_longitude,end_latitude,end_longitude,ride_type)
+ data = send_request(session, request_string)
  return data
 
-def cost(data):
- estimated_cost_cents_max=data['cost_estimates'][1]['estimated_cost_cents_max']
+def get_cost(data): 
+ estimated_cost_cents_max=data['cost_estimates'][0]['estimated_cost_cents_max']
  total_max=estimated_cost_cents_max/100
- if str(data['cost_estimates'][1]['currency']) == 'USD':
+ if str(data['cost_estimates'][0]['currency']) == 'USD':
   currency='dollars'
  else:
     currency='of unknown currency'
  print total_max 
- return "Your estimated cost is {}".format(total_max)+ " " +currency
+ print "Your estimated cost is {}".format(total_max)+ " " +currency
 
 def estimated_distance_miles(data):
- print "Your estimated miles is {}".format(data['cost_estimates'][1]['estimated_distance_miles'])
+ return "Your estimated miles is {}".format(data['cost_estimates'][0]['estimated_distance_miles'])
 
 def estimated_duration_seconds(data):
- print "Your estimated duration is {}".format(display_time(data['cost_estimates'][1]['estimated_duration_seconds']))
+ return "Your estimated duration is {}".format(display_time(data['cost_estimates'][0]['estimated_duration_seconds']))
 
-def closest_driver(heades,start_latitude,start_longitude,end_latitude,end_longitude):
- print "Checking for it"
+def get_eta_data(session):
+  
+ start_latitude, start_longitude=geo()
 
-
-
-def geo(address="175 5th Avenue NYC"):
- geolocator = Nominatim()
- location = geolocator.geocode(address)
- print(location.address)
- print((location.latitude, location.longitude))
- return location.latitude, location.longitude
+ request_string = 'eta?lat={}&lng={}&ride_type={}'.format(start_latitude,start_longitude,ride_type)
+ data = send_request(session, request_string)
+ return data
+ 
+def get_closest_driver(data):
+ estimated_time_seconds=data['eta_estimates'][0]['eta_seconds']
+ return display_time(estimated_time_seconds)

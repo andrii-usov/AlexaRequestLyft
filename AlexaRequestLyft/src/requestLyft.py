@@ -5,7 +5,7 @@ Created on May 7, 2016
 '''
 from __future__ import print_function
 from helpers import get_stage_number
-from lyftIntegration import cost, get_ride_info
+from lyftIntegration import get_eta_data,get_closest_driver
 
 
 applicationId="amzn1.echo-sdk-ams.app.6dc928c8-e705-4b14-b76d-7ba83e372ce7"
@@ -85,6 +85,11 @@ def on_session_ended(session_ended_request, session):
 
 # --------------- Functions that control the skill's behavior ------------------
 
+def get_help(session):
+    stage = get_stage_number(session)
+    speech_output=""
+    if (stage == 0):
+        speech_output="You can"
 
 def get_welcome_response(session):
     """ If we wanted to initialize the session to have some attributes we could
@@ -93,15 +98,10 @@ def get_welcome_response(session):
     card_title = "Lyft driver is near"
     
     should_end_session = True
+    data = get_eta_data(session)
     
-    start_latitude=37.7772
-    start_longitude=-122.4233
-    end_latitude=37.7972
-    end_longitude=-122.4533
-    
-    info = get_ride_info(session, start_latitude, start_longitude, end_latitude, end_longitude)
-    
-    speech_output = "Your driver would be here shortly. " +  cost(info) 
+    speech_output = "Sure, your Lyft Line is " +  get_closest_driver(data)  + " away. "\
+        "Do you want to request it?"
     reprompt_text = "I will try one more time"
     
     session_attributes = {'lyft_cab_id':'123', "stage":"1"}
@@ -130,14 +130,8 @@ def request_lyft(intent, session):
     
     should_end_session = True
     
-    start_latitude=37.7772
-    start_longitude=-122.4233
-    end_latitude=37.7972
-    end_longitude=-122.4533
-    
-    info = get_ride_info(session, start_latitude, start_longitude, end_latitude, end_longitude)
-    
-    speech_output = cost(info) 
+     
+    speech_output = ""
     reprompt_text = "I will try one more time"
     
     session_attributes = {'lyft_cab_id':'123'}

@@ -3,7 +3,9 @@ Created on May 7, 2016
 
 @author: Andrii Usov
 '''
-import json, requests
+import json, requests, urllib2, urllib
+from geopy.geocoders import Nominatim
+
 # --------------- Helpers that process requests ----------------------
 
 def get_stage_number(session):
@@ -42,3 +44,27 @@ def request_bearer_token():
  req=requests.post('https://api.lyft.com/oauth/token',auth=(client_id, client_secret), data=data, headers=header)
  req.status_code
  return req.json()['access_token']
+ 
+
+def send_request(session, request_string): 
+
+ headers = {
+    'Authorization': "Bearer " + get_bearer_token(session),
+ }
+ URL="https://api.lyft.com/v1/" + request_string
+ 
+ req = urllib2.Request(URL, headers=headers)
+ response = urllib2.urlopen(req)
+ the_page = response.read()
+ data = json.loads(the_page)
+ #for key, value in data.items():
+# print key, value
+ return data
+ 
+
+def geo(address="175 5th Avenue NYC"):
+ geolocator = Nominatim()
+ location = geolocator.geocode(address)
+ print(location.address)
+ print((location.latitude, location.longitude))
+ return location.latitude, location.longitude
