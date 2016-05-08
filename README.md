@@ -8,19 +8,19 @@ We were inspired by capabilities of voice control system of Amazon Echo (Alexa) 
 
 A new Skill allows Alexa to accept a ride requests using Lyft. After you tell Alexa your destination it will calculate approximate cost and duration of a ride and request a Lyft if you agree with conditions.
 
-## How I built it
+## How we built it
 
 We used Amazon AWS Alexa Toolkit together with AWS Lamda to create a new Skill. Also, we used ESRI API for translation physical address to coordinated (geocoding) and Lyft API to perform requests to cab service. To train Alexa for address recognition we build a custom Slot Address Type with about 30k physical addressess and most popular touristic destinations of NYC.
 
-## Challenges I ran into
+## Challenges we ran into
 
 It was challanging to train Alexa to understand the address information. Using a Slot was not obvious and took a time to implement. Also it was challanging to lync Lyft user accounts and handle tokens.
 
-## Accomplishments that I'm proud of
+## Accomplishments that we're proud of
 
 We're proud to present a system with configured interaction between all its services. Although it has a space for enhancements we believe this is a pretty good start.
 
-## What I learned
+## What we learned
 
 We learned how to create Alexa SKills, use Alexa Voice Services, Amazon WebServices API, manage sessions and tokens. 
 
