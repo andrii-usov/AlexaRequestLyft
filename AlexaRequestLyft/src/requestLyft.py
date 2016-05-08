@@ -129,7 +129,7 @@ def get_welcome_response(session):
         time_away = get_closest_driver(data)
     except  ValueError:
         return get_help(session)
-    speech_output = "Of course. Your  Lyft Line  is " +  time_away  + " away. "\
+    speech_output = "Of course. Your Lyft Line is " +  time_away  + " away. "\
         "Do you want to request it?"
     reprompt_text = "Do you want to request a Lyft Line, which is " + time_away + " away?" 
     
