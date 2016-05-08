@@ -4,8 +4,9 @@ Created on May 7, 2016
 @author: Andrii Usov
 '''
 from __future__ import print_function
-import httplib, urllib2, urllib, json
-from geopy.geocoders import Nominatim
+from helpers import get_stage_number
+from lyftIntegration import cost, get_ride_info
+
 
 applicationId="amzn1.echo-sdk-ams.app.6dc928c8-e705-4b14-b76d-7ba83e372ce7"
 
@@ -15,7 +16,7 @@ def lambda_handler(event, context):
     """
     print("event.session.application.applicationId=" +
           event['session']['application']['applicationId'])
-
+    print(event['session'])
     if (event['session']['application']['applicationId'] !=
             applicationId):
         raise ValueError("Invalid Application ID")
@@ -47,7 +48,7 @@ def on_launch(launch_request, session):
     print("on_launch requestId=" + launch_request['requestId'] +
           ", sessionId=" + session['sessionId'])
     # Dispatch to your skill's launch
-    return get_welcome_response()
+    return get_welcome_response(session)
 
 
 def on_intent(intent_request, session):
@@ -64,7 +65,7 @@ def on_intent(intent_request, session):
     if intent_name == "RequestLyft":
         return request_lyft(intent, session)
     elif intent_name == "AMAZON.HelpIntent":
-        return get_welcome_response()
+        return get_welcome_response(session)
     elif intent_name == "AMAZON.YesIntent":
         return call_a_cab(intent, session)
     elif intent_name == "AMAZON.CancelIntent" or intent_name == "AMAZON.StopIntent":
@@ -85,21 +86,26 @@ def on_session_ended(session_ended_request, session):
 # --------------- Functions that control the skill's behavior ------------------
 
 
-def get_welcome_response():
+def get_welcome_response(session):
     """ If we wanted to initialize the session to have some attributes we could
     add those here
     """
+    card_title = "Lyft driver is near"
+    
+    should_end_session = True
+    
+    start_latitude=37.7772
+    start_longitude=-122.4233
+    end_latitude=37.7972
+    end_longitude=-122.4533
+    
+    info = get_ride_info(session, start_latitude, start_longitude, end_latitude, end_longitude)
+    
+    speech_output = "Your driver would be here shortly. " +  cost(info) 
+    reprompt_text = "I will try one more time"
+    
+    session_attributes = {'lyft_cab_id':'123', "stage":"1"}
 
-    session_attributes = {}
-    card_title = "Welcome"
-    speech_output = "Welcome to the Alexa Lyft service. " \
-                    "To request a ride from Lyft say, " \
-                    "ask Lyft for a ride"
-    # If the user either does not reply to the welcome message or says something
-    # that is not understood, they will be prompted again with this text.
-    reprompt_text = "Please say, ask Lyft for a ride, " \
-                    "to request a ride from Lyft."
-    should_end_session = False
     return build_response(session_attributes, build_speechlet_response(
         card_title, speech_output, reprompt_text, should_end_session))
 
@@ -113,63 +119,6 @@ def handle_session_end_request():
     return build_response({}, build_speechlet_response(
         card_title, speech_output, None, should_end_session))
 
-intervals = (
-    ('weeks', 604800),  # 60 * 60 * 24 * 7
-    ('days', 86400),    # 60 * 60 * 24
-    ('hours', 3600),    # 60 * 60
-    ('minutes', 60),
-    ('seconds', 1),
-    )
-
-def display_time(seconds, granularity=2):
-    result = []
-
-    for name, count in intervals:
-        value = seconds // count
-        if value:
-            seconds -= value * count
-            if value == 1:
-                name = name.rstrip('s')
-            result.append("{} {}".format(value, name))
-    return ', '.join(result[:granularity])
-
-
-
-start_latitude=37.7772
-start_longitude=-122.4233
-end_latitude=37.7972
-end_longitude=-122.4533
-
-def get_ride_info(session,start_latitude,start_longitude,end_latitude,end_longitude):
-
- token=get_access_token(session)
- 
- headers = {
-    'Authorization': "'Bearer ",token,"'",
-
-
-#gAAAAABXLl70nF3DltGdK32gvOMwcBYyp2TAKQbzsenCvRcDPVJ54PcU9_t0zris5EJm-UJIDpZZvSyOhWNXfNioMkyi1es5f30yMaV-0AihBs8rWh-AhBt-gPQlrl6RoTWyDR2QgHlrab7IhqgXtYjpajBCKv9h-u1C4JjylbG8NJz38Iqi5fV-7W4063qAadKoTD-hdgigflkWcPAvrsf_JblbHWWMhQ==',
-}
-
- URL='https://api.lyft.com/v1/cost?start_lat={}&start_lng={}&end_lat={}&end_lng={}'.format(start_latitude,start_longitude,end_latitude,end_longitude)
- req = urllib2.Request(URL, headers=headers)
- response = urllib2.urlopen(req)
- the_page = response.read()
- data = json.loads(the_page)
-
- for key, value in data.items():
-	print key, value
- return data
-
-def cost(data):
- estimated_cost_cents_max=data['cost_estimates'][2]['estimated_cost_cents_max']
- total_max=estimated_cost_cents_max/100
- if str(data['cost_estimates'][1]['currency']) == 'USD':
- 	currency='dollars'
- else:
-    currency=' of unknown currency'
- print total_max 
- print "Your estimated cost is {}".format(total_max), currency
 
 
 # Entry point for ride request
@@ -177,12 +126,18 @@ def request_lyft(intent, session):
     """ gets estimates from Lyft
     """
 
-    card_title = intent['name']
+    card_title = "Lyft driver is near"
     
-    should_end_session = False
+    should_end_session = True
     
-    speech_output = "There is a Lyft cab 2 minutes away, "  \
-                    "would you like me to order it?"
+    start_latitude=37.7772
+    start_longitude=-122.4233
+    end_latitude=37.7972
+    end_longitude=-122.4533
+    
+    info = get_ride_info(session, start_latitude, start_longitude, end_latitude, end_longitude)
+    
+    speech_output = cost(info) 
     reprompt_text = "I will try one more time"
     
     session_attributes = {'lyft_cab_id':'123'}
@@ -210,19 +165,6 @@ def call_a_cab(intent, session):
     return build_response(session_attributes, build_speechlet_response(
         card_title, speech_output, reprompt_text, should_end_session))
 
-# --------------- Helpers that process requests ----------------------
-
-def get_stage_number(session):
-    if (hasattr(session, 'stage') == False or session['new'] == 'true'):
-        return 0;
-    else:
-        return session['stage']
-
-def get_access_token(session):
-    if hasattr(session['user'], 'accessToken') == True:
-        return session['user']['accessToken']
-    else:
-        raise ValueError("Session should contain access token")
 
 # --------------- Helpers that build all of the responses ----------------------
 
