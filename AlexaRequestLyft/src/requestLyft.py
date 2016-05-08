@@ -97,9 +97,11 @@ def get_help(session):
     if (stage == "0"):
         speech_output="You can ask Alexa for a ride, saying I need a Lyft"
     if (stage == "1" or stage == "3"):
-        speech_output="You should agree or disagree to request a ride"
+        speech_output="You should say yes or no"
     if (stage == "2"):
-        speech_output="You provide a destination"
+        speech_output="You should provide a destination"
+    if (stage == "4"):
+        return handle_session_end_request()
     
     reprompt_text=""
     
@@ -146,7 +148,7 @@ def handle_session_end_request():
     return build_response({}, build_speechlet_response(
         card_title, speech_output, None, should_end_session))
     
-def cancel_request():
+def cancel_request(session):
     card_title = "Session Ended"
     speech_output = "Your request has been canceled. " \
                     "Good bye! "
@@ -166,6 +168,8 @@ def set_destination(intent, session):
         data = get_cost_data(session)
         cost = get_cost(data)
         duration = estimated_duration_seconds(data)
+        if duration == "":
+            return wrong_address(session)
     except:
         return get_help(session)
     speech_output = "Thank you! The ride to " + destination + " will cost you around " + cost + " and take approximately " +  duration + ". "\
@@ -177,6 +181,18 @@ def set_destination(intent, session):
     return build_response(session['attributes'], build_speechlet_response(
         card_title, speech_output, reprompt_text, should_end_session))
 
+def wrong_address(session):
+    card_title = "Wrong address"
+    
+    should_end_session = False
+    
+    speech_output = "Sorry, the address could not be recognized. "\
+        "Please, try again" 
+    reprompt_text = "Provide destination address, please. "
+
+    return build_response(session['attributes'], build_speechlet_response(
+        card_title, speech_output, reprompt_text, should_end_session))   
+
 def request_ride(session):
     card_title = "Requesting ride"
     
@@ -184,12 +200,11 @@ def request_ride(session):
     
     speech_output = "Ok, the ride has been requested. "\
         "You may cancel it by saying, cancel" 
-    reprompt_text = "You can cancel your previous request by saying, cancel. "
     
     session['attributes']['stage']="4"
 
     return build_response(session['attributes'], build_speechlet_response(
-        card_title, speech_output, reprompt_text, should_end_session))
+        card_title, speech_output, None, should_end_session))
 # --------------- Helpers that build all of the responses ----------------------
 
 def build_speechlet_response(title, output, reprompt_text, should_end_session):
