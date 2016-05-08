@@ -3,9 +3,7 @@ Created on May 7, 2016
 
 @author: Pavlo Danchuk
 '''
-import httplib, urllib2, urllib, json, requests
-from geopy.geocoders import Nominatim
-from helpers import geo, send_request
+from helpers import send_request, new_geo
 
 
 intervals = (
