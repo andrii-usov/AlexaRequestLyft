@@ -55,7 +55,7 @@ def estimated_distance_miles(data):
 
 def estimated_duration_seconds(data):
 # return "Your estimated duration is {}".format(display_time(data['cost_estimates'][0]['estimated_duration_seconds']))
-  return display_time(data['cost_estimates'][0]['estimated_duration_seconds'], granularity=0)
+  return display_time(data['cost_estimates'][0]['estimated_duration_seconds'], granularity=1)
 
 def get_eta_data(session):
   

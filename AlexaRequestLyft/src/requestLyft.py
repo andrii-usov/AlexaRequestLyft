@@ -5,7 +5,7 @@ Created on May 7, 2016
 '''
 from __future__ import print_function
 from helpers import get_stage_number
-from lyftIntegration import get_eta_data,get_closest_driver, get_cost_data, get_cost
+from lyftIntegration import get_eta_data,get_closest_driver, get_cost_data, get_cost,estimated_duration_seconds
 
 
 applicationId="amzn1.echo-sdk-ams.app.6dc928c8-e705-4b14-b76d-7ba83e372ce7"
@@ -66,15 +66,16 @@ def on_intent(intent_request, session):
         return ask_for_destination(session)
     if intent_name == "AMAZON.YesIntent" and stage == "3":
         return request_ride(session)
-    elif intent_name == "SetDestination":
+    elif intent_name == "SetDestination" and stage == "2":
         return set_destination(intent, session)
+    elif intent_name == "AMAZON.CancelIntent" and stage == "4":
+        return cancel_request(session)
     elif intent_name == "AMAZON.HelpIntent":
         return get_help(session)
-    
-    elif intent_name == "AMAZON.CancelIntent" or intent_name == "AMAZON.StopIntent" or intent_name == "AMAZON.NoIntent":
+    elif intent_name == "AMAZON.CancelIntent" or intent_name == "AMAZON.StopIntent" or intent_name == "AMAZON.NoIntent" or stage == "4":
         return handle_session_end_request()
     else:
-        raise ValueError("Invalid intent")
+        return get_help(session)
 
 
 def on_session_ended(session_ended_request, session):
@@ -89,10 +90,21 @@ def on_session_ended(session_ended_request, session):
 # --------------- Functions that control the skill's behavior ------------------
 
 def get_help(session):
+    card_title = "Help"
+    should_end_session=False
     stage = get_stage_number(session)
     speech_output=""
-    if (stage == 0):
-        speech_output="You can"
+    if (stage == "0"):
+        speech_output="You can ask Alexa for a ride, saying I need a Lyft"
+    if (stage == "1" or stage == "3"):
+        speech_output="You should agree or disagree to request a ride"
+    if (stage == "2"):
+        speech_output="You provide a destination"
+    
+    reprompt_text=""
+    
+    return build_response(session['attributes'], build_speechlet_response(
+        card_title, speech_output, reprompt_text, should_end_session))
 
 def ask_for_destination(session):
     speech_output="What is your destination?"
@@ -110,9 +122,12 @@ def get_welcome_response(session):
     card_title = "Lyft driver is near"
     
     should_end_session = False
-    data = get_eta_data(session)
-    time_away = get_closest_driver(data)
-    speech_output = "Sure, your Lyft Line is " +  time_away  + " away. "\
+    try:
+        data = get_eta_data(session)
+        time_away = get_closest_driver(data)
+    except  ValueError:
+        return get_help(session)
+    speech_output = "Of course. Your  Lyft Line  is " +  time_away  + " away. "\
         "Do you want to request it?"
     reprompt_text = "Do you want to request a Lyft Line, which is " + time_away + " away?" 
     
@@ -124,8 +139,17 @@ def get_welcome_response(session):
 
 def handle_session_end_request():
     card_title = "Session Ended"
-    speech_output = "Thank you for using Alexa Lyft service. " \
+    speech_output = "Thank you for using Lyft service. " \
                     "Have a nice day! "
+    # Setting this to true ends the session and exits the skill.
+    should_end_session = True
+    return build_response({}, build_speechlet_response(
+        card_title, speech_output, None, should_end_session))
+    
+def cancel_request():
+    card_title = "Session Ended"
+    speech_output = "Your request has been canceled. " \
+                    "Good bye! "
     # Setting this to true ends the session and exits the skill.
     should_end_session = True
     return build_response({}, build_speechlet_response(
@@ -138,11 +162,13 @@ def set_destination(intent, session):
     
     destination = intent['slots']['Destination']['value']
     session['attributes']['destination']=destination
-    
-    data = get_cost_data(session)
-    cost = get_cost(data)
-    
-    speech_output = "Thank you! The ride to " + destination + " will cost you around " + cost + "." \
+    try:
+        data = get_cost_data(session)
+        cost = get_cost(data)
+        duration = estimated_duration_seconds(data)
+    except:
+        return get_help(session)
+    speech_output = "Thank you! The ride to " + destination + " will cost you around " + cost + " and take approximately " +  duration + ". "\
         "Do you still want to request it?"
     reprompt_text = "Do you want to request a Lyft?"
     
@@ -154,16 +180,13 @@ def set_destination(intent, session):
 def request_ride(session):
     card_title = "Requesting ride"
     
-    should_end_session = True
+    should_end_session = False
     
-    data = get_cost_data(session)
-    cost = get_cost(data)
+    speech_output = "Ok, the ride has been requested. "\
+        "You may cancel it by saying, cancel" 
+    reprompt_text = "You can cancel your previous request by saying, cancel. "
     
-    speech_output = "Ok, requesting a ride." \
-        "Good bye!"
-    reprompt_text = ""
-    
-    session['attributes']['stage']=3
+    session['attributes']['stage']="4"
 
     return build_response(session['attributes'], build_speechlet_response(
         card_title, speech_output, reprompt_text, should_end_session))

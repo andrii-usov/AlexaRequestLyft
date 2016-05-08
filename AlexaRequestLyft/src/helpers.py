@@ -3,7 +3,7 @@ Created on May 7, 2016
 
 @author: Andrii Usov
 '''
-import json, requests, urllib2, urllib
+import json, requests, urllib2
 from geopy.geocoders import Nominatim
 
 # --------------- Helpers that process requests ----------------------
