@@ -28,14 +28,14 @@ def display_time(seconds, granularity=2):
             result.append("{} {}".format(value, name))
     return ', '.join(result[:granularity])
 
-from_address="72 Bowne St, Brooklyn"
+to_address="175 5th Avenue NYC"
 ride_type="lyft_line"
 
 def get_cost_data(session):
  ride_type="lyft_line"
  start_latitude, start_longitude=geo()
 
- end_latitude, end_longitude = geo(from_address)
+ end_latitude, end_longitude = geo(to_address)
  request_string = 'cost?start_lat={}&start_lng={}&end_lat={}&end_lng={}&ride_type={}'.format(start_latitude,start_longitude,end_latitude,end_longitude,ride_type)
  data = send_request(session, request_string)
  return data

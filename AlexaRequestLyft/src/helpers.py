@@ -62,7 +62,7 @@ def send_request(session, request_string):
  return data
  
 
-def geo(address="175 5th Avenue NYC"):
+def geo(address="72 Bowne St, Brooklyn"):
  geolocator = Nominatim()
  location = geolocator.geocode(address)
  print(location.address)
