@@ -5,7 +5,7 @@ Created on May 7, 2016
 '''
 from __future__ import print_function
 from helpers import get_stage_number
-from lyftIntegration import get_eta_data,get_closest_driver, get_cost_data, get_cost,estimated_duration_seconds
+from lyftIntegration import get_eta_data,get_closest_driver, get_cost_data, get_cost,estimated_duration_seconds, send_request
 
 
 applicationId="amzn1.echo-sdk-ams.app.6dc928c8-e705-4b14-b76d-7ba83e372ce7"
@@ -201,6 +201,7 @@ def request_ride(session):
     speech_output = "Ok, the ride has been requested. "\
         "You may cancel it by saying, cancel" 
     
+    #!!Commented out for demo purposes!!!
     #send_request(session)
 
     session['attributes']['stage']="4"

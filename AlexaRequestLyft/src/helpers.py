@@ -61,12 +61,6 @@ def send_request(session, request_string):
 # print key, value
  return data
  
-def commit_request(session, request_string):
-  
- start_latitude, start_longitude=new_geo()
- request_string="rides?"
- data=send_request(session,request_string) 
- return data
 
 def geo(address="72 Bowne St, Brooklyn"):
  geolocator = Nominatim()
