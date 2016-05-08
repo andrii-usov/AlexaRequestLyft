@@ -201,6 +201,8 @@ def request_ride(session):
     speech_output = "Ok, the ride has been requested. "\
         "You may cancel it by saying, cancel" 
     
+    #send_request(session)
+
     session['attributes']['stage']="4"
 
     return build_response(session['attributes'], build_speechlet_response(
