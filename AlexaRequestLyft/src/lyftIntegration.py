@@ -52,10 +52,12 @@ def get_cost(data):
  return "{} {}".format(total_max, currency)
 
 def estimated_distance_miles(data):
- return "Your estimated miles is {}".format(data['cost_estimates'][0]['estimated_distance_miles'])
+# return "Your estimated miles is {}".format(data['cost_estimates'][0]['estimated_distance_miles'])
+  return data['cost_estimates'][0]['estimated_distance_miles']
 
 def estimated_duration_seconds(data):
- return "Your estimated duration is {}".format(display_time(data['cost_estimates'][0]['estimated_duration_seconds']))
+# return "Your estimated duration is {}".format(display_time(data['cost_estimates'][0]['estimated_duration_seconds']))
+  return display_time(data['cost_estimates'][0]['estimated_duration_seconds'])
 
 def get_eta_data(session):
   
@@ -66,5 +68,4 @@ def get_eta_data(session):
  return data
  
 def get_closest_driver(data):
- estimated_time_seconds=data['eta_estimates'][0]['eta_seconds']
- return display_time(estimated_time_seconds)
+ return display_time(data['eta_estimates'][0]['eta_seconds'])
