@@ -5,7 +5,7 @@ Created on May 7, 2016
 '''
 from __future__ import print_function
 from helpers import get_stage_number
-from lyftIntegration import get_eta_data,get_closest_driver
+from lyftIntegration import get_eta_data,get_closest_driver, get_cost_data, get_cost
 
 
 applicationId="amzn1.echo-sdk-ams.app.6dc928c8-e705-4b14-b76d-7ba83e372ce7"
@@ -16,7 +16,7 @@ def lambda_handler(event, context):
     """
     print("event.session.application.applicationId=" +
           event['session']['application']['applicationId'])
-    print(event['session'])
+    print(event)
     if (event['session']['application']['applicationId'] !=
             applicationId):
         raise ValueError("Invalid Application ID")
@@ -62,13 +62,16 @@ def on_intent(intent_request, session):
     stage = get_stage_number(session)
     
     # Dispatch to your skill's intent handlers
-    if intent_name == "RequestLyft":
-        return request_lyft(intent, session)
+    if intent_name == "AMAZON.YesIntent" and stage == "1":
+        return ask_for_destination(session)
+    if intent_name == "AMAZON.YesIntent" and stage == "3":
+        return request_ride(session)
+    elif intent_name == "SetDestination":
+        return set_destination(intent, session)
     elif intent_name == "AMAZON.HelpIntent":
-        return get_welcome_response(session)
-    elif intent_name == "AMAZON.YesIntent":
-        return call_a_cab(intent, session)
-    elif intent_name == "AMAZON.CancelIntent" or intent_name == "AMAZON.StopIntent":
+        return get_help(session)
+    
+    elif intent_name == "AMAZON.CancelIntent" or intent_name == "AMAZON.StopIntent" or intent_name == "AMAZON.NoIntent":
         return handle_session_end_request()
     else:
         raise ValueError("Invalid intent")
@@ -91,20 +94,29 @@ def get_help(session):
     if (stage == 0):
         speech_output="You can"
 
+def ask_for_destination(session):
+    speech_output="What is your destination?"
+    card_title = "Destination?"
+    reprompt_text="Sorry, what is the address you want a ride to?"
+    should_end_session=False
+    session['attributes']['stage']="2"
+    return build_response(session['attributes'], build_speechlet_response(
+        card_title, speech_output, reprompt_text, should_end_session))
+
 def get_welcome_response(session):
     """ If we wanted to initialize the session to have some attributes we could
     add those here
     """
     card_title = "Lyft driver is near"
     
-    should_end_session = True
+    should_end_session = False
     data = get_eta_data(session)
-    
-    speech_output = "Sure, your Lyft Line is " +  get_closest_driver(data)  + " away. "\
+    time_away = get_closest_driver(data)
+    speech_output = "Sure, your Lyft Line is " +  time_away  + " away. "\
         "Do you want to request it?"
-    reprompt_text = "I will try one more time"
+    reprompt_text = "Do you want to request a Lyft Line, which is " + time_away + " away?" 
     
-    session_attributes = {'lyft_cab_id':'123', "stage":"1"}
+    session_attributes = {"stage":"1"}
 
     return build_response(session_attributes, build_speechlet_response(
         card_title, speech_output, reprompt_text, should_end_session))
@@ -119,47 +131,42 @@ def handle_session_end_request():
     return build_response({}, build_speechlet_response(
         card_title, speech_output, None, should_end_session))
 
-
-
-# Entry point for ride request
-def request_lyft(intent, session):
-    """ gets estimates from Lyft
-    """
-
-    card_title = "Lyft driver is near"
-    
-    should_end_session = True
-    
-     
-    speech_output = ""
-    reprompt_text = "I will try one more time"
-    
-    session_attributes = {'lyft_cab_id':'123'}
-
-    return build_response(session_attributes, build_speechlet_response(
-        card_title, speech_output, reprompt_text, should_end_session))
-
-
-# Entry point for ride request
-def call_a_cab(intent, session):
-    """ gets estimates from Lyft
-    """
-
-    card_title = intent['name']
+def set_destination(intent, session):
+    card_title = "Destination set"
     
     should_end_session = False
     
-    cab_id = session['attributes']['lyft_cab_id']
+    destination = intent['slots']['Destination']['value']
+    session['attributes']['destination']=destination
     
-    speech_output = "Ok, calling"
-    reprompt_text = "I will try one more time"
+    data = get_cost_data(session)
+    cost = get_cost(data)
     
-    session_attributes = {'lyft_cab_id':'123'}
-
-    return build_response(session_attributes, build_speechlet_response(
+    speech_output = "Thank you! The ride to " + destination + " will cost you around " + cost + "." \
+        "Do you still want to request it?"
+    reprompt_text = "Do you want to request a Lyft?"
+    
+    session['attributes']['stage']="3"
+    
+    return build_response(session['attributes'], build_speechlet_response(
         card_title, speech_output, reprompt_text, should_end_session))
 
+def request_ride(session):
+    card_title = "Requesting ride"
+    
+    should_end_session = True
+    
+    data = get_cost_data(session)
+    cost = get_cost(data)
+    
+    speech_output = "Ok, requesting a ride." \
+        "Good bye!"
+    reprompt_text = ""
+    
+    session['attributes']['stage']=3
 
+    return build_response(session['attributes'], build_speechlet_response(
+        card_title, speech_output, reprompt_text, should_end_session))
 # --------------- Helpers that build all of the responses ----------------------
 
 def build_speechlet_response(title, output, reprompt_text, should_end_session):

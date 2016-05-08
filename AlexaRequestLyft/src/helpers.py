@@ -9,11 +9,14 @@ from geopy.geocoders import Nominatim
 # --------------- Helpers that process requests ----------------------
 
 def get_stage_number(session):
-    if (hasattr(session, 'stage') == False or session['new'] == 'true'):
-        return 0;
+    if session.has_key('attributes') == False or session['attributes'].has_key('stage') == False:
+        return "0"
     else:
-        return session['stage']
+        return session['attributes']['stage']
 
+
+data = { "new": "False", "attributes":{"stage": "1"}}
+print(get_stage_number(data))
 def get_access_token(session):
     try:
         token = session['user']['accessToken'] 

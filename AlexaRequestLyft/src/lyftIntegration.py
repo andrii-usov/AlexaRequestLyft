@@ -34,7 +34,7 @@ ride_type="lyft_line"
 def get_cost_data(session):
  ride_type="lyft_line"
  start_latitude, start_longitude=geo()
-
+ to_address = session['attributes']['destination']
  end_latitude, end_longitude = geo(to_address)
  request_string = 'cost?start_lat={}&start_lng={}&end_lat={}&end_lng={}&ride_type={}'.format(start_latitude,start_longitude,end_latitude,end_longitude,ride_type)
  data = send_request(session, request_string)
@@ -49,6 +49,7 @@ def get_cost(data):
     currency='of unknown currency'
  print total_max 
  print "Your estimated cost is {}".format(total_max)+ " " +currency
+ return "{} {}".format(total_max, currency)
 
 def estimated_distance_miles(data):
  return "Your estimated miles is {}".format(data['cost_estimates'][0]['estimated_distance_miles'])

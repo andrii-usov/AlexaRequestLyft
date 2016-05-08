@@ -1,0 +1,28 @@
+{
+  "intents": [
+    {
+      "intent": "SetDestination",
+      "slots": [
+        {
+          "name": "Destination",
+          "type": "ADDRESS"
+        }
+      ]
+    },
+    {
+      "intent": "AMAZON.HelpIntent"
+    },
+    {
+      "intent": "AMAZON.StopIntent"
+    },
+    {
+      "intent": "AMAZON.YesIntent"
+    },
+    {
+      "intent": "AMAZON.CancelIntent"
+    },
+    {
+      "intent": "AMAZON.NoIntent"
+    }
+  ]
+}
