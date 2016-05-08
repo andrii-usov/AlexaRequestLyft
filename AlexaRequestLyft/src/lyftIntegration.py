@@ -33,9 +33,9 @@ ride_type="lyft_line"
 
 def get_cost_data(session):
  ride_type="lyft_line"
- start_latitude, start_longitude=geo()
+ start_latitude, start_longitude=new_geo() #geo()
  to_address = session['attributes']['destination']
- end_latitude, end_longitude = geo(to_address)
+ end_latitude, end_longitude = new_geo(to_address) #geo(to_address)
  request_string = 'cost?start_lat={}&start_lng={}&end_lat={}&end_lng={}&ride_type={}'.format(start_latitude,start_longitude,end_latitude,end_longitude,ride_type)
  data = send_request(session, request_string)
  return data
@@ -61,7 +61,7 @@ def estimated_duration_seconds(data):
 
 def get_eta_data(session):
   
- start_latitude, start_longitude=geo()
+ start_latitude, start_longitude=new_geo() #geo()
 
  request_string = 'eta?lat={}&lng={}&ride_type={}'.format(start_latitude,start_longitude,ride_type)
  data = send_request(session, request_string)

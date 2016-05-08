@@ -71,3 +71,9 @@ def geo(address="72 Bowne St, Brooklyn"):
  print(location.address)
  print((location.latitude, location.longitude))
  return location.latitude, location.longitude
+
+def new_geo(address="72 Bowne St, Brooklyn"):
+ URL="http://geocode.arcgis.com/arcgis/rest/services/World/GeocodeServer/find?text=" + address + "&forStorage=true&token='1qy2qStzlXL-wgxROBy9d5p8eicSuhmBxYFZ2wwOhB-RF006gMETEUmc_IoV1rmAR6poqEl8yfJp7Ez8PJMTuiBV3VNtP1Evd_o8DmETQnVPBFiorBXhpr74_rslMlFWI7sLkv2l7ipLSGjWdTd67w..'&f=pjson"
+ req=requests.post(URL)
+ req.status_code
+ return "{}".format(req.json()['locations'][0]['feature']['geometry']['y']), "{}".format(req.json()['locations'][0]['feature']['geometry']['x'])
