@@ -1,7 +1,0 @@
-SetDestination destination is {Destination}
-SetDestination address is {Destination}
-SetDestination the destination is {Destination}
-SetDestination the address is {Destination}
-SetDestination i want to go to {Destination}
-SetDestination i want a ride to {Destination}
-SetDestination {Destination}
